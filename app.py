@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from googlesearch import search
 import requests
 from twilio.twiml.messaging_response import MessagingResponse
@@ -7,7 +7,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 app = Flask(__name__)
 
 
-@app.route("/", methods=["POST"])
+@app.route("/", methods=["GET", "POST"])
 # chatbot logic
 def bot():
 
@@ -24,7 +24,7 @@ def bot():
     result = []
 
     # searching and storing urls
-    for i in search(q, tld='co.in', num=6, stop=6, pause=2):
+    for i in search(q, num_results=6):
         result.append(i)
 
     # displaying result
