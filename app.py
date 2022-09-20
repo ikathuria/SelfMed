@@ -1,34 +1,43 @@
-from flask import Flask, request
+from flask import Flask
+from googlesearch import search
 import requests
 from twilio.twiml.messaging_response import MessagingResponse
+
 
 app = Flask(__name__)
 
 
-@app.route('/bot', methods=['POST'])
+@app.route("/", methods=["POST"])
+# chatbot logic
 def bot():
-    incoming_msg = request.values.get('Body', '').lower()
-    resp = MessagingResponse()
-    msg = resp.message()
-    responded = False
-    if 'quote' in incoming_msg:
-        # return a quote
-        r = requests.get('https://api.quotable.io/random')
-        if r.status_code == 200:
-            data = r.json()
-            quote = f'{data["content"]} ({data["author"]})'
-        else:
-            quote = 'I could not retrieve a quote at this time, sorry.'
-        msg.body(quote)
-        responded = True
-    if 'cat' in incoming_msg:
-        # return a cat pic
-        msg.media('https://cataas.com/cat')
-        responded = True
-    if not responded:
-        msg.body('I only know about famous quotes and cats, sorry!')
-    return str(resp)
+
+    # user input
+    user_msg = request.values.get('Body', '').lower()
+
+    # creating object of MessagingResponse
+    response = MessagingResponse()
+
+    # User Query
+    q = user_msg + "geeksforgeeks.org"
+
+    # list to store urls
+    result = []
+
+    # searching and storing urls
+    for i in search(q, tld='co.in', num=6, stop=6, pause=2):
+        result.append(i)
+
+    # displaying result
+    msg = response.message(f"--- Result for '{user_msg}' are  ---")
+
+    msg = response.message(result[0])
+    msg = response.message(result[1])
+    msg = response.message(result[2])
+    msg = response.message(result[3])
+    msg = response.message(result[4])
+
+    return str(response)
 
 
-if __name__ == '__main__':
-    app.run(port=4000)
+if __name__ == "__main__":
+    app.run()
