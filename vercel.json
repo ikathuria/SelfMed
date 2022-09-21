@@ -8,7 +8,7 @@
   ],
   "functions": {
     "api/**/*.py": {
-      "excludeFiles": "public/**",
+      "excludeFiles": ["public/**", ".git/**"],
       "memory": 1024,
       "maxDuration": 10
     }
