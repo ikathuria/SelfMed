@@ -14,7 +14,9 @@
   ],
   "functions": {
     "api/**/*.py": {
-      "excludeFiles": "data_collection/**"
+      "excludeFiles": "public/**",
+      "memory": 128,
+      "maxDuration": 10
     }
   }
 }
