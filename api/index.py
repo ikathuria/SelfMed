@@ -1,16 +1,7 @@
-import pickle
-
 from flask import Flask, request
 from twilio.twiml.messaging_response import MessagingResponse
 
 app = Flask(__name__)
-
-
-def load_pickle(filename):
-    with open(filename, "rb" ) as f:
-        file = pickle.load(f)
-    return file
-
 
 @app.route("/")
 def hello():
