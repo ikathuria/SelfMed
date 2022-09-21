@@ -14,7 +14,7 @@
   ],
   "functions": {
     "api/**/*.py": {
-      "excludeFiles": "./"
+      "excludeFiles": "data_collection/**"
     }
   }
 }

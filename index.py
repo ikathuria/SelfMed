@@ -23,8 +23,8 @@ def hello():
 
 @app.route('/bot', methods=['POST'])
 def bot():
-    lower_disease = load_pickle("diseases.p")
-    remedies = load_pickle("remedies.p")
+    lower_disease = load_pickle("./assets/pickles/diseases.p")
+    remedies = load_pickle("./assets/pickles/remedies.p")
 
     incoming_msg = request.values.get('Body', '').lower()
     resp = MessagingResponse()
