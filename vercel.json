@@ -14,7 +14,7 @@
   ],
   "functions": {
     "api/**/*.py": {
-      "excludeFiles": "**/*.py"
+      "excludeFiles": "./"
     }
   }
 }
