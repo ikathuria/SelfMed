@@ -1,21 +1,19 @@
+import json
+import requests
 import numpy as np
 import pandas as pd
+import pickle
 
 from flask import Flask, request
-import requests
-import json
 from twilio.twiml.messaging_response import MessagingResponse
 
 app = Flask(__name__)
 
-# remedies dataset
-df = pd.read_csv('datasets/remedies/mayo data.csv', index_col=0)
-df['remedies'] = df['remedies'].apply(
-    lambda x: x.replace('[', '').replace(']', '').replace("\"", '').replace("\'", '') if type(x) != float else ''
-)
-upper_disease = df.disease.to_numpy()
-lower_disease = df.lower_disease.to_numpy()
-remedies = df.remedies.apply(lambda x: x.split(', ') if type(x) != float else '').to_numpy()
+
+def load_pickle(filename):
+    with open(filename, "rb" ) as f:
+        file = pickle.load(f)
+    return file
 
 
 @app.route("/")
@@ -25,6 +23,9 @@ def hello():
 
 @app.route('/bot', methods=['POST'])
 def bot():
+    lower_disease = load_pickle("diseases.p")
+    remedies = load_pickle("remedies.p")
+
     incoming_msg = request.values.get('Body', '').lower()
     resp = MessagingResponse()
     msg = resp.message()
