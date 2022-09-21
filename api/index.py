@@ -1,7 +1,3 @@
-import json
-import requests
-import numpy as np
-import pandas as pd
 import pickle
 
 from flask import Flask, request
@@ -23,8 +19,8 @@ def hello():
 
 @app.route('/bot', methods=['POST'])
 def bot():
-    lower_disease = load_pickle("./assets/pickles/diseases.p")
-    remedies = load_pickle("./assets/pickles/remedies.p")
+    lower_disease = load_pickle("../public/pickles/diseases.p")
+    remedies = load_pickle("../public/pickles/remedies.p")
 
     incoming_msg = request.values.get('Body', '').lower()
     resp = MessagingResponse()
