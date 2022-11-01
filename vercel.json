@@ -11,12 +11,5 @@
       "src": "/(.*)",
       "dest": "/"
     }
-  ],
-  "functions": {
-    "api/**/*.py": {
-      "excludeFiles": ".git/**",
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  }
+  ]
 }
