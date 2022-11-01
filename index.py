@@ -69,8 +69,10 @@ def respond():
 
             # reply with a photo to the name the user sent,
             # note that you can send photos by url and telegram will fetch it for you
-            bot.sendPhoto(chat_id=chat_id, photo=url,
-                          reply_to_message_id=msg_id)
+            bot.sendPhoto(
+                chat_id=chat_id, photo=url,
+                reply_to_message_id=msg_id
+            )
 
         except Exception:
             # if things went wrong
@@ -85,9 +87,10 @@ def respond():
 
 @app.route('/setwebhook', methods=['GET', 'POST'])
 def set_webhook():
-    # we use the bot object to link the bot to our app which live
+    # we use the bot object to link the bot to our app which lives
     # in the link provided by URL
-    s = bot.setWebhook('{URL}{HOOK}'.format(URL=URL, HOOK=TOKEN))
+    print(URL + TOKEN)
+    s = bot.setWebhook(URL + TOKEN)
     # something to let us know things work
     if s:
         return "webhook setup ok"
