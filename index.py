@@ -16,7 +16,6 @@ global TOKEN
 TOKEN = bot_token
 bot = telegram.Bot(token=TOKEN)
 
-
 # df = pd.read_csv("/home/ikathuria/selfmed/static/mayo data.csv", index_col=0)
 # df['remedies'] = df['remedies'].apply(
 #     lambda x: x.replace('[', '').replace(']', '').replace(
@@ -26,7 +25,6 @@ bot = telegram.Bot(token=TOKEN)
 # upper_disease = df.disease.tolist()
 # lower_disease = df.lower_disease.tolist()
 # remedies = df.remedies.apply(lambda x: x.split(', ') if type(x) != float else '').tolist()
-
 
 # # ####################################################################################
 @app.route('/')
