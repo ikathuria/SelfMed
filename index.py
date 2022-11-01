@@ -1,7 +1,8 @@
 import re
-import json
-import requests
-import numpy as np
+import os
+import git
+import hmac
+import hashlib
 import pandas as pd
 
 from flask import Flask, request
@@ -9,26 +10,60 @@ import telegram
 from telebot.credentials import bot_token, bot_user_name, URL
 # from twilio.twiml.messaging_response import MessagingResponse
 
-global bot
-global TOKEN
-
-TOKEN = bot_token
-bot = telegram.Bot(token=TOKEN)
-
-
+# # ####################################################################################
 app = Flask(__name__)
 
 
-df = pd.read_csv("/home/ikathuria/selfmed/static/mayo data.csv", index_col=0)
-df['remedies'] = df['remedies'].apply(
-    lambda x: x.replace('[', '').replace(']', '').replace(
-        "\"", '').replace("\'", '') if type(x) != float else ''
-)
+global bot
+global TOKEN
+global W_KEY
 
-upper_disease = df.disease.tolist()
-lower_disease = df.lower_disease.tolist()
-remedies = df.remedies.apply(lambda x: x.split(
-    ', ') if type(x) != float else '').tolist()
+TOKEN = bot_token
+bot = telegram.Bot(token=TOKEN)
+W_KEY = os.getenv("SECRET_KEY")
+
+
+# df = pd.read_csv("/home/ikathuria/selfmed/static/mayo data.csv", index_col=0)
+# df['remedies'] = df['remedies'].apply(
+#     lambda x: x.replace('[', '').replace(']', '').replace(
+#         "\"", '').replace("\'", '') if type(x) != float else ''
+# )
+
+# upper_disease = df.disease.tolist()
+# lower_disease = df.lower_disease.tolist()
+# remedies = df.remedies.apply(lambda x: x.split(', ') if type(x) != float else '').tolist()
+
+
+# # ####################################################################################
+def is_valid_signature(x_hub_signature, data, private_key):
+    # x_hub_signature and data are from the webhook payload
+    # private key is the webhook secret
+    hash_algorithm, github_signature = x_hub_signature.split('=', 1)
+    algorithm = hashlib.__dict__.get(hash_algorithm)
+    encoded_key = bytes(private_key, 'latin-1')
+    mac = hmac.new(encoded_key, msg=data, digestmod=algorithm)
+    return hmac.compare_digest(mac.hexdigest(), github_signature)
+
+
+@app.route('/')
+def index():
+    return 'SelfMed Chatbot.'
+
+
+@app.route('/update_server', methods=['POST'])
+def webhook():
+    if request.method == 'POST':
+        x_hub_signature = request.headers.get('X-Hub-Signature')
+        if not is_valid_signature(x_hub_signature, request.data, W_KEY):
+            return 'Wrong event type', 400
+
+        repo = git.Repo('https://github.com/ikathuria/SelfMed.git')
+        origin = repo.remotes.origin
+        origin.pull()
+        return 'Updated PythonAnywhere successfully', 200
+
+    else:
+        return 'Wrong event type', 400
 
 
 @app.route('/{}'.format(TOKEN), methods=['POST'])
@@ -135,11 +170,6 @@ def set_webhook():
 #         msg.body("Sorry! I couldn't understand. Please try again.")
 
 #     return str(resp)
-
-
-@app.route('/')
-def index():
-    return 'SelfMed Chatbot.'
 
 
 if __name__ == '__main__':
