@@ -4,27 +4,47 @@ import pandas as pd
 
 from flask import Flask, request
 import telegram
+
 from telebot.credentials import bot_token, bot_user_name, URL
-# from twilio.twiml.messaging_response import MessagingResponse
+from telebot.prediction import *
 
 # # ####################################################################################
 app = Flask(__name__)
 
 global bot
 global TOKEN
+global updater
 
 TOKEN = bot_token
 bot = telegram.Bot(token=TOKEN)
 
-# df = pd.read_csv("/home/ikathuria/selfmed/static/mayo data.csv", index_col=0)
-# df['remedies'] = df['remedies'].apply(
-#     lambda x: x.replace('[', '').replace(']', '').replace(
-#         "\"", '').replace("\'", '') if type(x) != float else ''
-# )
+df = pd.read_excel("/home/ikathuria/selfmed/static/final data.xlsx", index_col=0)
+disease1 = [i for i in df['disease'].to_list() if isinstance(i, str)]
+disease2 = [i for i in df['synonym_disease'].to_list() if isinstance(i, str)]
+disease3 = [i for i in df['synonym_disease2'].to_list() if isinstance(i, str)]
+remedies = df['remedies'].to_list()
+diseases_overview = [i for i in df['overview'].to_list() if isinstance(i, str)]
 
-# upper_disease = df.disease.tolist()
-# lower_disease = df.lower_disease.tolist()
-# remedies = df.remedies.apply(lambda x: x.split(', ') if type(x) != float else '').tolist()
+
+DIS_DICT = {}
+for i in range(len(disease1)):
+    try:
+        DIS_DICT[disease1[i]] = preprocess_pipe(diseases_overview[i])
+    except:
+        pass
+
+for i in range(len(disease2)):
+    try:
+        DIS_DICT[disease2[i]] = preprocess_pipe(diseases_overview[i])
+    except:
+        pass
+
+for i in range(len(disease3)):
+    try:
+        DIS_DICT[disease3[i]] = preprocess_pipe(diseases_overview[i])
+    except:
+        pass
+
 
 # # ####################################################################################
 @app.route('/')
@@ -41,46 +61,98 @@ def respond():
     msg_id = update.message.message_id
 
     # Telegram understands UTF-8, so encode text for unicode compatibility
-    text = update.message.text.encode('utf-8').decode()
+    text = update.message.text.encode('utf-8').decode().lower()
 
     # for debugging
     print("got text message :", text)
 
-    # the first time you chat with the bot AKA the welcoming message
+    # welcoming message ##############################################################
     if text == "/start":
         # print the welcoming message
         bot_welcome = """
-       Hello 🙋🏽‍♂, \nThis is SelfMed, a self diagnosis and remedy chatbot developed by Ishani Kathuria & Kamad Saxena to provide free healthcare advice.\n📞 National health Helpline: 1800-180-1104 | \n Ambulance: 102 \nHow are you feeling today? \n*1.* Check my symptoms. \n*2.* Find remedy for my condition.
-       """
+Hello 🙋🏽‍♂
+This is SelfMed, a self diagnosis and remedy chatbot developed by Ishani Kathuria & Kamad Saxena to provide free healthcare advice.
+How are you feeling today?
+/symptoms - Find disease by describing your symptoms
+/remedy - Find remedies to conditions you already know about
+
+📞 National health Helpline: 1800-180-1104 | Ambulance: 102
+        """
+
         # send the welcoming message
         bot.sendMessage(
             chat_id=chat_id, text=bot_welcome, reply_to_message_id=msg_id
         )
 
-    else:
-        try:
-            # clear the message we got from any non alphabets
-            text = re.sub(r"\W", "_", text)
+    # help text #######################################################################
+    elif text == "/help":
+        bot_welcome = """
+/symptoms - Find disease by describing your symptoms
+/remedy - Find remedies to conditions you already know about
+        """
 
-            # create the api link for the avatar based on http://avatars.adorable.io/
-            url = "https://api.adorable.io/avatars/285/{}.png".format(
-                text.strip()
-            )
+        bot.sendMessage(
+            chat_id=chat_id, text=bot_welcome, reply_to_message_id=msg_id
+        )
 
-            # reply with a photo to the name the user sent,
-            # note that you can send photos by url and telegram will fetch it for you
-            bot.sendPhoto(
-                chat_id=chat_id, photo=url,
-                reply_to_message_id=msg_id
-            )
+    # check symtoms ####################################################################
+    elif text == "/symptoms":
+        bot_welcome = """
+Enter your symptoms
+        """
 
-        except Exception:
-            # if things went wrong
+        bot.sendMessage(
+            chat_id=chat_id, text=bot_welcome, reply_to_message_id=msg_id
+        )
+
+        text = update.message.text.encode('utf-8').decode().lower()
+        text = preprocess_pipe(text)
+        predict_disease(text, DIS_DICT)
+
+
+    # find remedy ####################################################################
+    elif text == "/remedy":
+        bot_welcome = """
+Enter your medical condition / disease
+        """
+
+        bot.sendMessage(
+            chat_id=chat_id, text=bot_welcome, reply_to_message_id=msg_id
+        )
+
+    elif text in disease1:
+        rem = remedies[disease1.index(text)].split('\n')
+
+        for i in rem:
             bot.sendMessage(
-                chat_id=chat_id,
-                text="There was a problem in the name you used, please enter different name",
-                reply_to_message_id=msg_id
+                chat_id=chat_id, text=i, reply_to_message_id=msg_id
             )
+
+    elif text in disease2:
+        rem = remedies[disease2.index(text)].split('\n')
+
+        for i in rem:
+            bot.sendMessage(
+                chat_id=chat_id, text=i, reply_to_message_id=msg_id
+            )
+
+    elif text in disease3:
+        rem = remedies[disease3.index(text)].split('\n')
+
+        for i in rem:
+            bot.sendMessage(
+                chat_id=chat_id, text=i, reply_to_message_id=msg_id
+            )
+
+    else:
+        bot_welcome = """
+/symptoms - Find disease by describing your symptoms
+/remedy - Find remedies to conditions you already know about
+        """
+
+        bot.sendMessage(
+            chat_id=chat_id, text=bot_welcome, reply_to_message_id=msg_id
+        )
 
     return 'ok'
 
@@ -96,49 +168,6 @@ def set_webhook():
         return "webhook setup ok"
     else:
         return "webhook setup failed"
-
-
-# @app.route('/bot', methods=['POST'])
-# def bot():
-#     incoming_msg = request.values.get('Body', '').lower()
-#     resp = MessagingResponse()
-#     msg = resp.message()
-#     responded = False
-
-#     greeting = [
-#         'hi', 'hey', 'heya', 'hello', 'sup',
-#         'whats up', 'bonjour', 'hola', 'menu'
-#     ]
-
-#     if incoming_msg in greeting:
-#         text = "Hello 🙋🏽‍♂, \nThis is SelfMed, a self diagnosis and remedy chatbot developed by Ishani Kathuria & Kamad Saxena to provide free healthcare advice.\n📞 National health Helpline: 1800-180-1104 | \n Ambulance: 102 \nHow are you feeling today? \n*1.* Check my symptoms. \n*2.* Find remedy for my condition."
-#         msg.body(text)
-
-#         responded = True
-
-#     if incoming_msg == '1':
-#         text = "Please type in your symptoms in separate lines to begin."
-#         msg.body(text)
-
-#         responded = True
-
-#     if incoming_msg == '2':
-#         text = "Please type in the disease you want a remedy for."
-#         msg.body(text)
-
-#         responded = True
-
-#     if incoming_msg in lower_disease:
-#         text = remedies[lower_disease.index(incoming_msg)][:5]
-#         text = "\n".join(text)
-#         msg.body(text)
-
-#         responded = True
-
-#     if responded == False:
-#         msg.body("Sorry! I couldn't understand. Please try again.")
-
-#     return str(resp)
 
 
 if __name__ == '__main__':
