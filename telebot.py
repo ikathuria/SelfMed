@@ -222,13 +222,13 @@ def main():
     )
     application.add_handler(symptoms_conv_handler)
 
-    # application.run_polling()
-    application.run_webhook(
-        listen="0.0.0.0",
-        port=int(PORT),
-        url_path=TOKEN,
-        webhook_url=URL+TOKEN
-    )
+    application.run_polling()
+    # application.run_webhook(
+    #     listen="0.0.0.0",
+    #     port=int(PORT),
+    #     url_path=TOKEN,
+    #     webhook_url=URL+TOKEN
+    # )
 
 
 if __name__ == '__main__':
