@@ -1,7 +1,7 @@
 import os
 import logging
 import pandas as pd
-from typing import Dict
+from dotenv import load_dotenv
 
 # telegram API
 from telegram import __version__ as TG_VER
@@ -35,13 +35,14 @@ if __version_info__ < (20, 0, 0, "alpha", 1):
     )
 
 # custom functions
-from static.telebot.prediction import *
+from static.prediction import *
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
+load_dotenv()
 
 
 # # ####################################################################################
@@ -59,9 +60,11 @@ for i in range(len(diseases)):
 
 # # ####################################################################################
 global TOKEN
+global URL
 
 TOKEN = os.environ.get('TOKEN')
-PORT = int(os.environ.get('PORT', 88))
+PORT = int(os.environ.get('PORT', 8443))
+URL = os.environ.get('URL')
 
 REMEDY = 0
 DISEASE = 1
@@ -69,20 +72,6 @@ DIS_REMEDY = 2
 
 
 # # # ####################################################################################
-
-# @app.route('/setwebhook', methods=['GET', 'POST'])
-# def set_webhook():
-#     # we use the bot object to link the bot to our app which lives
-#     # in the link provided by URL
-#     print(URL + TOKEN)
-#     s = bot.setWebhook(URL + TOKEN)
-#     # something to let us know things work
-#     if s:
-#         return "webhook setup ok"
-#     else:
-#         return "webhook setup failed"
-
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     bot_welcome = """
 Hello 🙋🏽‍♂
@@ -235,8 +224,10 @@ def main():
 
     # application.run_polling()
     application.run_webhook(
-        listen="0.0.0.0", port=int(PORT), url_path=TOKEN,
-        webhook_url="https://ikathuria.github.io/SelfMed/" + TOKEN
+        listen="0.0.0.0",
+        port=int(PORT),
+        url_path=TOKEN,
+        webhook_url=URL+TOKEN
     )
 
 
