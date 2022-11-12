@@ -28,7 +28,7 @@ remedy -->
 
 ---
 
-<p align="center"> 🤖 A medical assistant to self diagnose and self treat yourself right fom home.
+<p align="center"> 🤖 A medical assistant to self diagnose and self treat yourself right from home.
     <br> 
 </p>
 
@@ -52,7 +52,7 @@ Write about 1-2 paragraphs describing the purpose of your bot.
 
 ## 🎥 Demo / Working <a name = "demo"></a>
 
-[Live demo on Telegram](t.me/self_med_bot)
+[Live demo on Telegram](https://t.me/self_med_bot)
 
 ![Working](https://media.giphy.com/media/20NLMBm0BkUOwNljwv/giphy.gif)
 
