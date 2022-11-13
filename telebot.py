@@ -36,6 +36,7 @@ if __version_info__ < (20, 0, 0, "alpha", 1):
 
 # custom functions
 from static.prediction import *
+from static.credentials import *
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -59,13 +60,6 @@ for i in range(len(diseases)):
 
 
 # # ####################################################################################
-global TOKEN
-global URL
-
-TOKEN = os.environ.get('TOKEN')
-PORT = int(os.environ.get('PORT', 8443))
-URL = os.environ.get('URL')
-
 REMEDY = 0
 DISEASE = 1
 DIS_REMEDY = 2
@@ -222,13 +216,13 @@ def main():
     )
     application.add_handler(symptoms_conv_handler)
 
-    application.run_polling()
-    # application.run_webhook(
-    #     listen="0.0.0.0",
-    #     port=int(PORT),
-    #     url_path=TOKEN,
-    #     webhook_url=URL+TOKEN
-    # )
+    # application.run_polling()
+    application.run_webhook(
+        listen="0.0.0.0",
+        port=int(PORT),
+        url_path=TOKEN,
+        webhook_url=URL+TOKEN
+    )
 
 
 if __name__ == '__main__':
