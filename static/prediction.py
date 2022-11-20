@@ -1,12 +1,14 @@
 import warnings
 warnings.filterwarnings(action='ignore')
 
+from googletrans import Translator
+translator = Translator()
+
+import re
 import string
 import inflect  # convert number into words
-from tqdm import tqdm
 
 import pandas as pd
-import numpy as np
 
 import nltk
 from nltk.corpus import stopwords
@@ -19,10 +21,16 @@ from sentence_transformers import SentenceTransformer, util
 
 # # ####################################################################################
 # LOADING DATA AND MODEL
-embedder = SentenceTransformer('all-MiniLM-L6-v2')
+global df
+global diseases
+global remedies
 
-df = pd.read_excel("static/datasets/final data.xlsx")
-diseases = df.disease.values
+embedder = SentenceTransformer('all-MiniLM-L6-v2')
+eng_hi = SentenceTransformer('paraphrase-multilingual-MiniLM-L12-v2')
+
+df = pd.read_excel("static/final_data.xlsx")
+remedies = df.remedies.to_list()
+diseases = df.disease.to_list()
 diseases_overview = df.overview.values
 diseases_symptoms = df.symptoms.values
 
@@ -129,6 +137,28 @@ def preprocess_pipe(text):
 
 
 # # ####################################################################################
+# URL
+def check_url(text):
+    regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+
+    if re.findall(regex, text) != []:
+        return True
+    return False
+
+
+def is_hindi(character):
+    maxchar = max(character)
+    if u'\u0900' <= maxchar <= u'\u097f':
+        return True
+    else:
+      return False
+
+
+def eng2hi(sentence):
+    return translator.translate(sentence, dest="hi").text
+
+
+# # ####################################################################################
 # GET SYNONYMS
 def get_syns(text):
     res = ""
@@ -142,13 +172,16 @@ def get_syns(text):
 
 # # ####################################################################################
 # PREDICTION MODEL
-def predict_disease(query):
+def predict_disease(query, hin=False):
     results = {}
 
-    query = preprocess_pipe(query)
-    query = get_syns(query)
+    if not hin:
+        query = preprocess_pipe(query)
+        query = get_syns(query)
 
-    query_embedding = embedder.encode(query, convert_to_tensor=True)
+        query_embedding = embedder.encode(query, convert_to_tensor=True)
+    else:
+        query_embedding = eng_hi.encode(query, convert_to_tensor=True)
 
     # util.semantic_search to perform cosine similarty + topk
     hits = util.semantic_search(query_embedding, corpus_embeddings, top_k=5)
@@ -156,19 +189,21 @@ def predict_disease(query):
     for hit in hits:
         results[diseases[hit['corpus_id']]] = hit['score']
 
+    results['none of the above'] = 0
+
     return results
 
 
 # # ####################################################################################
 # FINAL
-def combine_functions(queries, multi=False):
+def combine_functions(queries, hin=False, multi=False):
     results = []
 
     if multi:
         for query in queries:
-            results.append(predict_disease(query))
+            results.append(predict_disease(query, hin))
     else:
-        results.append(predict_disease(queries))
+        results.append(predict_disease(queries, hin))
 
     return results
 
