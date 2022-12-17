@@ -108,7 +108,10 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     Ask the user for info about the selected predefined choice.
     """
 
-    text = "Update your preferences"
+    text = "Update your personal details"
+    if context.user_data.get("language") == "hindi":
+        text = "अपनी व्यक्तिगत जानकारी अपडेट करें"
+
     await update.message.reply_text(
         text,
         reply_markup=settings_markup,
@@ -121,32 +124,50 @@ async def set_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Set user's language
     """
+
     text = update.message.text
 
     if text == "Age":
+        reply = "Please enter your age"
+        if context.user_data.get("language") == "hindi":
+            reply = "कृपया अपनी उम्र दर्ज करें"
+
         await update.message.reply_text(
-            "Please enter your age",
+            reply,
             reply_markup=ReplyKeyboardRemove(),
         )
 
         return AGE
 
     elif text == "Gender":
+        reply = "Please choose your gender"
         keyboard = [
             [InlineKeyboardButton("Male", callback_data="Male")],
             [InlineKeyboardButton("Female", callback_data="Female")],
             [InlineKeyboardButton("Other", callback_data="Other")]
         ]
+        if context.user_data.get("language") == "hindi":
+            reply = "कृपया अपना लिंग चुनें"
+            keyboard = [
+                [InlineKeyboardButton("पुरुष", callback_data="Male")],
+                [InlineKeyboardButton("महिला", callback_data="Female")],
+                [InlineKeyboardButton("दूसरे", callback_data="Other")]
+            ]
+
         markup = InlineKeyboardMarkup(keyboard)
 
         await update.message.reply_text(
-            "Please choose your gender",
+            reply,
             reply_markup=markup,
         )
 
         return GENDER
 
     elif text == "Language":
+        reply = "Please choose your preferred language"
+        if context.user_data.get("language") == "hindi":
+            reply = "कृपया अपनी पसंदीदा भाषा चुनें"
+
         keyboard = [
             [InlineKeyboardButton('English', callback_data="English")],
             [InlineKeyboardButton('हिन्दी', callback_data="Hindi")]
@@ -154,7 +175,7 @@ async def set_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
         markup = InlineKeyboardMarkup(keyboard)
 
         await update.message.reply_text(
-            "Please choose your preferred language",
+            reply,
             reply_markup=markup,
         )
 
@@ -171,13 +192,16 @@ async def set_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_age(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    Set user's gender
+    Set user's age
     """
 
     text = int(update.message.text)
     context.user_data["age"] = text
 
     thank_you = "Your age is now set to " + str(text)
+    if context.user_data.get("language") == "hindi":
+        thank_you = eng2hi(thank_you)
+
     await update.message.reply_text(
         text=thank_you,
         reply_markup=settings_markup,
@@ -198,8 +222,8 @@ async def handle_gender(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["gender"] = text.lower()
 
     thank_you = "Your gender is now set as " + text
-    # if context.user_data.get("language") == "hindi":
-    #     thank_you = "आपकी चुनी हुई भाषा अब हिंदी है।"
+    if context.user_data.get("language") == "hindi":
+        thank_you = eng2hi(thank_you)
 
     await update.callback_query.message.reply_text(
         thank_you,
@@ -224,7 +248,7 @@ async def handle_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["language"] = text.lower()
 
     thank_you = "Your chosen language is now English."
-    if text == "Hindi":
+    if context.user_data.get("language") == "hindi":
         thank_you = "आपकी चुनी हुई भाषा अब हिंदी है।"
         diseases = df.hindi_disease.to_list()
         remedies = df.hindi_remedies.to_list()
@@ -239,9 +263,10 @@ async def handle_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # # # ####################################################################################
 async def get_condition(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    bot_welcome = """
-Please choose the condition you want remedies for
-"""
+    bot_welcome = "Please choose the condition you want remedies for"
+
+    if context.user_data.get("language") == "hindi":
+        bot_welcome = eng2hi(bot_welcome)
 
     reply_keyboard = [[i] for i in diseases]
     markup = ReplyKeyboardMarkup(
@@ -275,9 +300,10 @@ async def give_remedy(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # # # ####################################################################################
 async def get_symptoms(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    bot_welcome = """
-Please give a brief of your symptoms
-"""
+    bot_welcome = "Please give a brief of your symptoms"
+
+    if context.user_data.get("language") == "hindi":
+        bot_welcome = eng2hi(bot_welcome)
 
     await update.message.reply_text(
         text=bot_welcome
@@ -288,17 +314,19 @@ Please give a brief of your symptoms
 
 async def give_disease(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text = update.message.text.lower()
-    print(text)
+    reply = "Processing your symptoms..."
+
+    if context.user_data.get("language") == "hindi":
+        reply = eng2hi(reply)
 
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="Processing your symptoms..."
+        text=reply
     )
 
     preds = combine_functions(
         text, hin=context.user_data.get("language", False)
     )
-    print(preds)
 
     keyboard = []
     for res in preds:
@@ -324,10 +352,14 @@ async def give_disease_remedy(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     dis = query.data
 
+    reply = "Please submit some more symptoms for better results..."
+    if context.user_data.get("language") == "hindi":
+        reply = eng2hi(reply)
+
     if 'none' in dis:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text='please submit some more symptoms for better results'
+            text=reply
         )
 
         return DISEASE
@@ -358,9 +390,13 @@ async def done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """
     Display the gathered info and ends the settings conversation.
     """
+    
+    reply = f"I learned these facts about you: {facts_to_str(context.user_data)}"
+    if context.user_data.get("language") == "hindi":
+        reply = eng2hi(reply)
 
     await update.message.reply_text(
-        f"I learned these facts about you: {facts_to_str(context.user_data)}",
+        reply,
         reply_markup=ReplyKeyboardRemove(),
     )
 
@@ -372,8 +408,12 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     Cancels and ends the conversation.
     """
 
+    reply = "Thank you, bye! Stay safe."
+    if context.user_data.get("language") == "hindi":
+        reply = eng2hi(reply)
+
     await update.message.reply_text(
-        "Bye! Stay safe, wear a mask.",
+        reply,
         reply_markup=ReplyKeyboardRemove()
     )
 
@@ -384,6 +424,7 @@ def main():
     """
     Run the bot.
     """
+
     # persistence = PicklePersistence(filepath="conversationbot")
     application = Application.builder().token(
         TOKEN
