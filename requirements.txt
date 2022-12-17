@@ -1,8 +1,14 @@
+Flask==2.2.2
+googletrans==3.0.0
+googletrans_py==4.0.0
 inflect==6.0.2
 nltk==3.7
 numpy==1.23.4
 pandas==1.5.1
 Py_Dictionary==4.1.4
 pydictionary==2.0.1
+python-dotenv==0.21.0
+python_telegram_bot==20.0a4
 sentence_transformers==2.2.2
+telegram==0.0.1
 tqdm==4.64.1
