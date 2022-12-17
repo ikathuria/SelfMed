@@ -28,7 +28,7 @@ from telegram.ext import (
 try:
     from telegram import __version_info__
 except ImportError:
-    __version_info__ = (0, 0, 0, 0, 0)  # type: ignore[assignment]
+    __version_info__ = (0, 0, 0, 0, 0)
 
 if __version_info__ < (20, 0, 0, "alpha", 1):
     raise RuntimeError(
@@ -122,7 +122,7 @@ async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def set_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
-    Set user's language
+    Set user's details
     """
 
     text = update.message.text
@@ -252,6 +252,9 @@ async def handle_language(update: Update, context: ContextTypes.DEFAULT_TYPE):
         thank_you = "आपकी चुनी हुई भाषा अब हिंदी है।"
         diseases = df.hindi_disease.to_list()
         remedies = df.hindi_remedies.to_list()
+    else:
+        diseases = df.disease.to_list()
+        remedies = df.remedies.to_list()
 
     await update.callback_query.message.reply_text(
         text=thank_you,
@@ -287,7 +290,7 @@ async def give_remedy(update: Update, context: ContextTypes.DEFAULT_TYPE):
     rem = remedies[diseases.index(dis)].split('\n')
 
     for i in rem:
-        if not check_url(i):
+        if not check_image_url(i):
             await update.message.reply_text(
                 i,
                 reply_markup=ReplyKeyboardRemove(),
@@ -365,7 +368,7 @@ async def give_disease_remedy(update: Update, context: ContextTypes.DEFAULT_TYPE
         return DISEASE
 
     for i in remedies[diseases.index(dis)].split('\n'):
-        if not check_url(i):
+        if not check_image_url(i):
             await update.callback_query.message.reply_text(
                 i,
                 reply_markup=ReplyKeyboardRemove()

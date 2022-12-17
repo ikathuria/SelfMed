@@ -2,7 +2,7 @@ import warnings
 warnings.filterwarnings(action='ignore')
 
 from googletrans import Translator
-translator = Translator()
+lang_translator = Translator()
 
 import re
 import string
@@ -138,8 +138,8 @@ def preprocess_pipe(text):
 
 # # ####################################################################################
 # URL
-def check_url(text):
-    regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
+def check_image_url(text):
+    regex = r"(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)"
 
     if re.findall(regex, text) != []:
         return True
@@ -155,7 +155,7 @@ def is_hindi(character):
 
 
 def eng2hi(sentence):
-    return translator.translate(sentence, dest="hi").text
+    return lang_translator.translate(sentence, dest="hi").text
 
 
 # # ####################################################################################
